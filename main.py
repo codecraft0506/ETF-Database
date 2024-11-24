@@ -1,5 +1,5 @@
-import requests
-from lxml import html
+from scrapling import StealthyFetcher
+
 
 class StockInfoScraper:
     def __init__(self, symbol):
@@ -7,28 +7,28 @@ class StockInfoScraper:
         self.yahoo_base_url = "https://tw.stock.yahoo.com/quote"
         self.macro_micro_base_url = "https://www.macromicro.me/etf/tw/intro"
         self.moneydj_base_url = "https://www.moneydj.com/ETF"
+        self.fetcher = StealthyFetcher()
 
     def fetch_dividend_info(self):
         url = f"{self.yahoo_base_url}/{self.symbol}.TWO/dividend"
-        response = requests.get(url)
-        tree = html.fromstring(response.content)
-
+        page = self.fetcher.fetch(url)
+        
         try:
-            dividend_amount = tree.xpath(
-                '//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[2]/div/div[3]/span'
-            )[0].text_content()
-            dividend_yield = tree.xpath(
-                '//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[2]/div/div[5]/span'
-            )[0].text_content()
-            ex_dividend_date = tree.xpath(
-                '//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[2]/div/div[7]'
-            )[0].text_content()
-            dividend_recovery_days = tree.xpath(
-                '//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[2]/div/div[11]'
-            )[0].text_content()
-        except IndexError:
-            return {"Error": "無法取得配息資訊，請檢查 XPath 或網頁結構是否改變。"}
-
+            dividend_amount = page.css_first(
+                '#main-2-QuoteDividend-Proxy section:nth-of-type(2) div:nth-of-type(3) ul li:nth-of-type(2) div:nth-of-type(3) span::text'
+            ).clean()
+            dividend_yield = page.css_first(
+                '#main-2-QuoteDividend-Proxy section:nth-of-type(2) div:nth-of-type(3) ul li:nth-of-type(2) div:nth-of-type(5) span::text'
+            ).clean()
+            ex_dividend_date = page.css_first(
+                '#main-2-QuoteDividend-Proxy section:nth-of-type(2) div:nth-of-type(3) ul li:nth-of-type(2) div:nth-of-type(7)::text'
+            ).clean()
+            dividend_recovery_days = page.css_first(
+                '#main-2-QuoteDividend-Proxy section:nth-of-type(2) div:nth-of-type(3) ul li:nth-of-type(2) div:nth-of-type(11)::text'
+            ).clean()
+        except AttributeError:
+            return {"Error": "無法取得配息資訊，請檢查選擇器或網站結構是否改變。"}
+        
         return {
             "MonthlyDividend": dividend_amount,
             "MonthlyDividendYield": dividend_yield,
@@ -38,52 +38,53 @@ class StockInfoScraper:
 
     def fetch_profile_info(self):
         url = f"{self.yahoo_base_url}/{self.symbol}.TWO/profile"
-        response = requests.get(url)
-        tree = html.fromstring(response.content)
-
+        page = self.fetcher.fetch(url)
+        
         try:
-            asset_size = tree.xpath(
-                '//*[@id="main-2-QuoteProfile-Proxy"]/div/section[1]/div[2]/div[11]/div/div'
-            )[0].text_content()
-        except IndexError:
-            return {"Error": "無法取得公司概況資訊，請檢查 XPath 或網頁結構是否改變。"}
-
+            asset_size = page.css_first(
+                '#main-2-QuoteProfile-Proxy section:nth-of-type(1) div:nth-of-type(11) div div::text'
+            ).clean()
+        except AttributeError:
+            return {"Error": "無法取得公司概況資訊，請檢查選擇器或網站結構是否改變。"}
+        
         return {"AssetSize": asset_size}
 
     def fetch_yield_info(self):
         url = f"{self.macro_micro_base_url}/{self.symbol}"
-        response = requests.get(url)
-        tree = html.fromstring(response.content)
+        page = self.fetcher.fetch(url)
 
-        # try:
-        annualized_yield = tree.xpath(
-            '//*[@id="content--dividend"]/div/div[2]/p'
-        )
-        ytd_total_return = tree.xpath(
-            '//*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[7]'
-        )
-        one_month_total_return = tree.xpath(
-            '//*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[4]'
-        )
-        # except IndexError:
-        #     return {"Error": "無法取得收益率資訊，請檢查 XPath 或網頁結構是否改變。"}
-
+        try:
+            annualized_yield = page.css_first(
+                '#content--dividend div:nth-of-type(2) p::text'
+            ).clean()
+            ytd_total_return = page.css_first(
+                '#content--price div:nth-of-type(3) table tbody tr:nth-of-type(3) td:nth-of-type(7)::text'
+            ).clean()
+            one_month_total_return = page.css_first(
+                '#content--price div:nth-of-type(3) table tbody tr:nth-of-type(3) td:nth-of-type(4)::text'
+            ).clean()
+        except AttributeError:
+            return {"Error": "無法取得收益率資訊，請檢查選擇器或網站結構是否改變。"}
+        
         return {
             "AnnualizedYield": annualized_yield,
             "YTDTotalReturn": ytd_total_return,
             "OneMonthTotalReturn": one_month_total_return,
         }
-        
+
     def get_moneydj_info(self):
         url = f"{self.moneydj_base_url}/X/Basic/Basic0004.xdjhtm?etfid={self.symbol}.TW"
-        response = requests.get(url)
-        tree = html.fromstring(response.content)
-        last_year_management_fee = tree.xpath(
-                '//*[@id="sTable"]/tbody/tr[11]/td[1]'
-            )[0].text_content()
-        custodian_bank = tree.xpath(
-                '//*[@id="sTable"]/tbody/tr[15]/td'
-            )[0].text_content()
+        page = self.fetcher.fetch(url)
+
+        try:
+            last_year_management_fee = page.css_first(
+                '#sTable tbody tr:nth-of-type(11) td:nth-of-type(1)::text'
+            ).clean()
+            custodian_bank = page.css_first(
+                '#sTable tbody tr:nth-of-type(15) td::text'
+            ).clean()
+        except AttributeError:
+            return {"Error": "無法取得 MoneyDJ 資訊，請檢查選擇器或網站結構是否改變。"}
         
         return {
             "LastYearManagementFee": last_year_management_fee,
