@@ -1,0 +1,94 @@
+2024-11-25 17:49:38,128 - INFO - 開始抓取 ETF 資料，日期: 2024-11-25
+2024-11-25 17:49:47,395 - INFO - 開始處理 ETF 代號: 00687B
+2024-11-25 17:49:47,400 - INFO - 抓取 Yahoo 資料，ETF 代號: 00687B
+2024-11-25 17:49:48,443 - INFO - 成功抓取 Yahoo 資料，ETF 代號: 00687B
+2024-11-25 17:49:48,445 - INFO - 抓取 TPEX 資料，ETF 代號: 00687B
+2024-11-25 17:49:52,204 - INFO - 成功抓取 TPEX 資料，ETF 代號: 00687B
+2024-11-25 17:49:52,205 - INFO - 抓取 MacroMicro 資料，ETF 代號: 00687B
+2024-11-25 17:49:59,324 - INFO - 成功抓取 MacroMicro 資料，ETF 代號: 00687B
+2024-11-25 17:49:59,325 - INFO - 抓取 MoneyDJ 資料，ETF 代號: 00687B
+2024-11-25 17:50:07,292 - INFO - 成功抓取 MoneyDJ 資料，ETF 代號: 00687B
+2024-11-25 17:50:07,293 - INFO - 開始處理 ETF 代號: 00696B
+2024-11-25 17:50:07,295 - INFO - 抓取 Yahoo 資料，ETF 代號: 00696B
+2024-11-25 17:50:08,486 - INFO - 成功抓取 Yahoo 資料，ETF 代號: 00696B
+2024-11-25 17:50:08,488 - INFO - 抓取 TPEX 資料，ETF 代號: 00696B
+2024-11-25 17:50:11,740 - INFO - 成功抓取 TPEX 資料，ETF 代號: 00696B
+2024-11-25 17:50:11,741 - INFO - 抓取 MacroMicro 資料，ETF 代號: 00696B
+2024-11-25 17:50:15,192 - ERROR - 抓取 MacroMicro 資料時發生錯誤，ETF 代號: 00696B，錯誤訊息: Message: Unable to locate element: //*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[7]; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:193:5
+NoSuchElementError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:511:5
+dom.find/</<@chrome://remote/content/shared/DOM.sys.mjs:136:16
+
+2024-11-25 17:50:15,194 - INFO - 抓取 MoneyDJ 資料，ETF 代號: 00696B
+2024-11-25 17:50:18,780 - INFO - 成功抓取 MoneyDJ 資料，ETF 代號: 00696B
+2024-11-25 17:50:18,781 - INFO - 開始處理 ETF 代號: 00719B
+2024-11-25 17:50:18,781 - INFO - 抓取 Yahoo 資料，ETF 代號: 00719B
+2024-11-25 17:50:20,025 - INFO - 成功抓取 Yahoo 資料，ETF 代號: 00719B
+2024-11-25 17:50:20,034 - INFO - 抓取 TPEX 資料，ETF 代號: 00719B
+2024-11-25 17:50:23,346 - INFO - 成功抓取 TPEX 資料，ETF 代號: 00719B
+2024-11-25 17:50:23,347 - INFO - 抓取 MacroMicro 資料，ETF 代號: 00719B
+2024-11-25 17:50:26,934 - ERROR - 抓取 MacroMicro 資料時發生錯誤，ETF 代號: 00719B，錯誤訊息: Message: Unable to locate element: //*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[7]; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:193:5
+NoSuchElementError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:511:5
+dom.find/</<@chrome://remote/content/shared/DOM.sys.mjs:136:16
+
+2024-11-25 17:50:26,935 - INFO - 抓取 MoneyDJ 資料，ETF 代號: 00719B
+2024-11-25 17:50:30,826 - INFO - 成功抓取 MoneyDJ 資料，ETF 代號: 00719B
+2024-11-25 17:50:34,243 - INFO - 將資料寫入 Excel 檔案: stock_data.xlsx
+2024-11-25 17:50:36,688 - INFO - 資料成功寫入 stock_data.xlsx
+2024-11-25 17:50:36,688 - INFO - 將資料寫入 Excel 檔案: stock_data.xlsx
+2024-11-25 17:50:36,818 - INFO - 資料成功寫入 stock_data.xlsx
+2024-11-25 17:50:36,818 - INFO - 將資料寫入 Excel 檔案: stock_data.xlsx
+2024-11-25 17:50:36,952 - INFO - 資料成功寫入 stock_data.xlsx
+2024-11-25 17:50:36,955 - INFO - ETF 資料抓取與匯出完成。
+2024-11-25 17:52:18,059 - INFO - 開始抓取 ETF 資料，日期: 2024-11-25
+2024-11-25 17:52:24,012 - INFO - 開始處理 ETF 代號: 00687B
+2024-11-25 17:52:24,012 - INFO - 抓取 Yahoo 資料，ETF 代號: 00687B
+2024-11-25 17:52:24,923 - INFO - 成功抓取 Yahoo 資料，ETF 代號: 00687B
+2024-11-25 17:52:24,927 - INFO - 抓取 TPEX 資料，ETF 代號: 00687B
+2024-11-25 17:52:28,745 - INFO - 成功抓取 TPEX 資料，ETF 代號: 00687B
+2024-11-25 17:52:28,746 - INFO - 抓取 MacroMicro 資料，ETF 代號: 00687B
+2024-11-25 17:52:34,717 - INFO - 成功抓取 MacroMicro 資料，ETF 代號: 00687B
+2024-11-25 17:52:34,719 - INFO - 抓取 MoneyDJ 資料，ETF 代號: 00687B
+2024-11-25 17:52:41,350 - INFO - 成功抓取 MoneyDJ 資料，ETF 代號: 00687B
+2024-11-25 17:52:41,350 - INFO - 開始處理 ETF 代號: 00696B
+2024-11-25 17:52:41,350 - INFO - 抓取 Yahoo 資料，ETF 代號: 00696B
+2024-11-25 17:52:45,540 - INFO - 成功抓取 Yahoo 資料，ETF 代號: 00696B
+2024-11-25 17:52:45,542 - INFO - 抓取 TPEX 資料，ETF 代號: 00696B
+2024-11-25 17:52:48,798 - INFO - 成功抓取 TPEX 資料，ETF 代號: 00696B
+2024-11-25 17:52:48,798 - INFO - 抓取 MacroMicro 資料，ETF 代號: 00696B
+2024-11-25 17:52:52,356 - ERROR - 抓取 MacroMicro 資料時發生錯誤，ETF 代號: 00696B，錯誤訊息: Message: Unable to locate element: //*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[7]; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:193:5
+NoSuchElementError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:511:5
+dom.find/</<@chrome://remote/content/shared/DOM.sys.mjs:136:16
+
+2024-11-25 17:52:52,357 - INFO - 抓取 MoneyDJ 資料，ETF 代號: 00696B
+2024-11-25 17:52:56,281 - INFO - 成功抓取 MoneyDJ 資料，ETF 代號: 00696B
+2024-11-25 17:52:56,284 - INFO - 開始處理 ETF 代號: 00719B
+2024-11-25 17:52:56,285 - INFO - 抓取 Yahoo 資料，ETF 代號: 00719B
+2024-11-25 17:52:57,715 - INFO - 成功抓取 Yahoo 資料，ETF 代號: 00719B
+2024-11-25 17:52:57,721 - INFO - 抓取 TPEX 資料，ETF 代號: 00719B
+2024-11-25 17:53:00,948 - INFO - 成功抓取 TPEX 資料，ETF 代號: 00719B
+2024-11-25 17:53:00,948 - INFO - 抓取 MacroMicro 資料，ETF 代號: 00719B
+2024-11-25 17:53:04,623 - ERROR - 抓取 MacroMicro 資料時發生錯誤，ETF 代號: 00719B，錯誤訊息: Message: Unable to locate element: //*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[7]; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:193:5
+NoSuchElementError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:511:5
+dom.find/</<@chrome://remote/content/shared/DOM.sys.mjs:136:16
+
+2024-11-25 17:53:04,627 - INFO - 抓取 MoneyDJ 資料，ETF 代號: 00719B
+2024-11-25 17:53:09,024 - INFO - 成功抓取 MoneyDJ 資料，ETF 代號: 00719B
+2024-11-25 17:53:12,565 - INFO - 將資料寫入 Excel 檔案: stock_data.xlsx
+2024-11-25 17:53:12,898 - WARNING - 資料已存在，跳過寫入：Date=2024-11-25, Symbol=00687B
+2024-11-25 17:53:12,898 - INFO - 將資料寫入 Excel 檔案: stock_data.xlsx
+2024-11-25 17:53:12,914 - WARNING - 資料已存在，跳過寫入：Date=2024-11-25, Symbol=00696B
+2024-11-25 17:53:12,919 - INFO - 將資料寫入 Excel 檔案: stock_data.xlsx
+2024-11-25 17:53:12,938 - WARNING - 資料已存在，跳過寫入：Date=2024-11-25, Symbol=00719B
+2024-11-25 17:53:12,939 - INFO - ETF 資料抓取與匯出完成。

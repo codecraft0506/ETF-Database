@@ -1,113 +1,225 @@
-from scrapling import StealthyFetcher
+import os
+import time
+import logging
+from datetime import datetime
 
+import requests
+from lxml import html
+import pandas as pd
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
 
-class StockInfoScraper:
-    def __init__(self, symbol):
-        self.symbol = symbol
-        self.yahoo_base_url = "https://tw.stock.yahoo.com/quote"
-        self.macro_micro_base_url = "https://www.macromicro.me/etf/tw/intro"
-        self.moneydj_base_url = "https://www.moneydj.com/ETF"
-        self.fetcher = StealthyFetcher()
+# ------------------------------
+# 設定日誌
+# ------------------------------
+logging.basicConfig(
+    level=logging.INFO,  # 設定日誌等級
+    format='%(asctime)s - %(levelname)s - %(message)s',  # 設定日誌格式
+    handlers=[
+        logging.FileHandler("scraper.log"),  # 寫入日誌檔案
+        logging.StreamHandler()  # 同時輸出到控制台
+    ]
+)
 
-    def fetch_dividend_info(self):
-        url = f"{self.yahoo_base_url}/{self.symbol}.TWO/dividend"
-        page = self.fetcher.fetch(url)
-        
-        try:
-            dividend_amount = page.css_first(
-                '#main-2-QuoteDividend-Proxy section:nth-of-type(2) div:nth-of-type(3) ul li:nth-of-type(2) div:nth-of-type(3) span::text'
-            ).clean()
-            dividend_yield = page.css_first(
-                '#main-2-QuoteDividend-Proxy section:nth-of-type(2) div:nth-of-type(3) ul li:nth-of-type(2) div:nth-of-type(5) span::text'
-            ).clean()
-            ex_dividend_date = page.css_first(
-                '#main-2-QuoteDividend-Proxy section:nth-of-type(2) div:nth-of-type(3) ul li:nth-of-type(2) div:nth-of-type(7)::text'
-            ).clean()
-            dividend_recovery_days = page.css_first(
-                '#main-2-QuoteDividend-Proxy section:nth-of-type(2) div:nth-of-type(3) ul li:nth-of-type(2) div:nth-of-type(11)::text'
-            ).clean()
-        except AttributeError:
-            return {"Error": "無法取得配息資訊，請檢查選擇器或網站結構是否改變。"}
-        
+# ------------------------------
+# 抓取 Yahoo 資料
+# ------------------------------
+def get_yahoo_data(symbol):
+    logging.info(f"抓取 Yahoo 資料，ETF 代號: {symbol}")
+    try:
+        dividend_url = f"https://tw.stock.yahoo.com/quote/{symbol}.TWO/dividend"
+        dividend_response = requests.get(dividend_url)
+        dividend_response.raise_for_status()
+        dividend_tree = html.fromstring(dividend_response.text)
+
+        # 抓取配息金額、殖利率、填息天數
+        dividend_amount = dividend_tree.xpath('//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[2]/div/div[3]/span/text()')
+        dividend_yield = dividend_tree.xpath('//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[2]/div/div[5]/span/text()')
+        dividend_recovery_days = dividend_tree.xpath('//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[2]/div/div[11]/text()')
+
+        dividend_amount = dividend_amount[0].strip() if dividend_amount else "N/A"
+        dividend_yield = dividend_yield[0].strip() if dividend_yield else "N/A"
+        dividend_recovery_days = dividend_recovery_days[0].strip() if dividend_recovery_days else "N/A"
+
+        # 抓取資產規模、除息日
+        profile_url = f"https://tw.stock.yahoo.com/quote/{symbol}.TWO/profile"
+        profile_response = requests.get(profile_url)
+        profile_response.raise_for_status()
+        profile_tree = html.fromstring(profile_response.text)
+
+        asset_size = profile_tree.xpath('//*[@id="main-2-QuoteProfile-Proxy"]/div/section[1]/div[2]/div[11]/div/div/text()')
+        ex_dividend_date = profile_tree.xpath('//*[@id="main-2-QuoteProfile-Proxy"]/div/section[3]/div[3]/div[3]/div/div/text()')
+
+        asset_size = asset_size[0].strip() if asset_size else "N/A"
+        ex_dividend_date = ex_dividend_date[0].strip() if ex_dividend_date else "N/A"
+
+        logging.info(f"成功抓取 Yahoo 資料，ETF 代號: {symbol}")
+
         return {
-            "MonthlyDividend": dividend_amount,
-            "MonthlyDividendYield": dividend_yield,
-            "ExDividendDate": ex_dividend_date,
-            "DividendRecoveryDays": dividend_recovery_days,
+            "當月配息金額": dividend_amount,
+            "當月殖利率": dividend_yield,
+            "填息天數": dividend_recovery_days,
+            "資產規模": asset_size,
+            "除息日": ex_dividend_date,
+        }
+    except Exception as e:
+        logging.error(f"抓取 Yahoo 資料時發生錯誤，ETF 代號: {symbol}，錯誤訊息: {e}")
+        return {
+            "當月配息金額": "N/A",
+            "當月殖利率": "N/A",
+            "填息天數": "N/A",
+            "資產規模": "N/A",
+            "除息日": "N/A",
         }
 
-    def fetch_profile_info(self):
-        url = f"{self.yahoo_base_url}/{self.symbol}.TWO/profile"
-        page = self.fetcher.fetch(url)
-        
-        try:
-            asset_size = page.css_first(
-                '#main-2-QuoteProfile-Proxy section:nth-of-type(1) div:nth-of-type(11) div div::text'
-            ).clean()
-        except AttributeError:
-            return {"Error": "無法取得公司概況資訊，請檢查選擇器或網站結構是否改變。"}
-        
-        return {"AssetSize": asset_size}
+# ------------------------------
+# 抓取 TPEX 資料
+# ------------------------------
+def get_tpex_data(symbol, driver):
+    logging.info(f"抓取 TPEX 資料，ETF 代號: {symbol}")
+    try:
+        url = f"https://www.tpex.org.tw/zh-tw/product/etf/product/detail.html?type=bond&code={symbol}"
+        driver.get(url)
+        logging.debug("已開啟 TPEX 網頁")
+        time.sleep(3)  # 等待頁面加載
 
-    def fetch_yield_info(self):
-        url = f"{self.macro_micro_base_url}/{self.symbol}"
-        page = self.fetcher.fetch(url)
+        # 抓取收益分配日
+        dividend_distribution_date = driver.find_element(By.XPATH, '//*[@id="tables-content"]/div[2]/div[2]/table/tbody/tr[21]/td[2]').text.strip()
+        logging.info(f"成功抓取 TPEX 資料，ETF 代號: {symbol}")
+    except Exception as e:
+        logging.error(f"抓取 TPEX 資料時發生錯誤，ETF 代號: {symbol}，錯誤訊息: {e}")
+        dividend_distribution_date = "N/A"
+    return {
+        "收益分配日": dividend_distribution_date,
+    }
 
-        try:
-            annualized_yield = page.css_first(
-                '#content--dividend div:nth-of-type(2) p::text'
-            ).clean()
-            ytd_total_return = page.css_first(
-                '#content--price div:nth-of-type(3) table tbody tr:nth-of-type(3) td:nth-of-type(7)::text'
-            ).clean()
-            one_month_total_return = page.css_first(
-                '#content--price div:nth-of-type(3) table tbody tr:nth-of-type(3) td:nth-of-type(4)::text'
-            ).clean()
-        except AttributeError:
-            return {"Error": "無法取得收益率資訊，請檢查選擇器或網站結構是否改變。"}
-        
-        return {
-            "AnnualizedYield": annualized_yield,
-            "YTDTotalReturn": ytd_total_return,
-            "OneMonthTotalReturn": one_month_total_return,
-        }
+# ------------------------------
+# 抓取 MacroMicro 資料
+# ------------------------------
+def get_macromicro_data(symbol, driver):
+    logging.info(f"抓取 MacroMicro 資料，ETF 代號: {symbol}")
+    try:
+        url = f"https://www.macromicro.me/etf/tw/intro/{symbol}"
+        driver.get(url)
+        logging.debug("已開啟 MacroMicro 網頁")
+        time.sleep(3)  # 等待頁面加載
 
-    def get_moneydj_info(self):
-        url = f"{self.moneydj_base_url}/X/Basic/Basic0004.xdjhtm?etfid={self.symbol}.TW"
-        page = self.fetcher.fetch(url)
+        # 抓取年初至今總報酬率和一個月總報酬率
+        ytd_total_return = driver.find_element(By.XPATH, '//*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[7]').text.strip()
+        one_month_total_return = driver.find_element(By.XPATH, '//*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[4]').text.strip()
+        logging.info(f"成功抓取 MacroMicro 資料，ETF 代號: {symbol}")
+    except Exception as e:
+        logging.error(f"抓取 MacroMicro 資料時發生錯誤，ETF 代號: {symbol}，錯誤訊息: {e}")
+        ytd_total_return = "N/A"
+        one_month_total_return = "N/A"
+    return {
+        "年初至今總報酬率": ytd_total_return,
+        "一個月總報酬率": one_month_total_return,
+    }
 
-        try:
-            last_year_management_fee = page.css_first(
-                '#sTable tbody tr:nth-of-type(11) td:nth-of-type(1)::text'
-            ).clean()
-            custodian_bank = page.css_first(
-                '#sTable tbody tr:nth-of-type(15) td::text'
-            ).clean()
-        except AttributeError:
-            return {"Error": "無法取得 MoneyDJ 資訊，請檢查選擇器或網站結構是否改變。"}
-        
-        return {
-            "LastYearManagementFee": last_year_management_fee,
-            "CustodianBank": custodian_bank,
-        }
+# ------------------------------
+# 抓取 MoneyDJ 資料
+# ------------------------------
+def get_moneydj_data(symbol, driver):
+    logging.info(f"抓取 MoneyDJ 資料，ETF 代號: {symbol}")
+    try:
+        url = f"https://www.moneydj.com/ETF/X/Basic/Basic0004.xdjhtm?etfid={symbol}.TW"
+        driver.get(url)
+        logging.debug("已開啟 MoneyDJ 網頁")
+        time.sleep(3)  # 等待頁面加載
 
+        # 抓取前一年管理費和保管銀行
+        last_year_management_fee = driver.find_element(By.XPATH, '//*[@id="sTable"]/tbody/tr[11]/td[1]').text.strip()
+        custodian_bank = driver.find_element(By.XPATH, '//*[@id="sTable"]/tbody/tr[15]/td').text.strip()
+        logging.info(f"成功抓取 MoneyDJ 資料，ETF 代號: {symbol}")
+    except Exception as e:
+        logging.error(f"抓取 MoneyDJ 資料時發生錯誤，ETF 代號: {symbol}，錯誤訊息: {e}")
+        last_year_management_fee = "N/A"
+        custodian_bank = "N/A"
+    return {
+        "前一年管理費": last_year_management_fee,
+        "保管銀行": custodian_bank,
+    }
 
+# ------------------------------
+# 將資料寫入 Excel（長格式，避免重複）
+# ------------------------------
+def export_to_excel(data, filename="stock_data.xlsx"):
+    logging.info(f"將資料寫入 Excel 檔案: {filename}")
+    try:
+        # 將新資料轉換為 DataFrame
+        df_new = pd.DataFrame([data])
+
+        if os.path.exists(filename):
+            # 讀取現有的 Excel 檔案
+            df_existing = pd.read_excel(filename)
+
+            # 檢查是否已存在相同日期和 Symbol 的資料
+            mask = (df_existing['Date'] == data['Date']) & (df_existing['Symbol'] == data['Symbol'])
+            if not df_existing[mask].empty:
+                logging.warning(f"資料已存在，跳過寫入：Date={data['Date']}, Symbol={data['Symbol']}")
+                return
+            else:
+                # 追加新資料
+                df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+        else:
+            # 如果 Excel 檔案不存在，直接使用新資料
+            df_combined = df_new
+
+        # 將合併後的資料寫入 Excel
+        df_combined.to_excel(filename, index=False)
+        logging.info(f"資料成功寫入 {filename}")
+    except Exception as e:
+        logging.error(f"寫入 Excel 時發生錯誤：{e}")
+
+# ------------------------------
+# 主程式
+# ------------------------------
 if __name__ == "__main__":
-    stock_symbol = "00679B"
-    scraper = StockInfoScraper(stock_symbol)
+    # 定義 ETF 代號列表
+    symbols = ['00687B', '00696B', '00719B']  # 可以根據需求增加或修改代號
 
-    # 抓取配息資訊
-    dividend_info = scraper.fetch_dividend_info()
-    print("Dividend Information:", dividend_info)
+    # 獲取當前日期
+    current_date = datetime.now().strftime("%Y-%m-%d")
 
-    # 抓取公司概況資訊
-    profile_info = scraper.fetch_profile_info()
-    print("Profile Information:", profile_info)
+    logging.info(f"開始抓取 ETF 資料，日期: {current_date}")
 
-    # 抓取收益率資訊
-    yield_info = scraper.fetch_yield_info()
-    print("Yield Information:", yield_info)
+    # 初始化 Selenium WebDriver
+    options = Options()
+    options.add_argument("--headless")  # 無頭模式
+    driver = webdriver.Firefox(options=options)
 
-    # 抓取MoneyDJ資訊
-    moneydj_info = scraper.get_moneydj_info()
-    print("MoneyDJ Information:", moneydj_info)
+    all_data = []
+
+    for symbol in symbols:
+        logging.info(f"開始處理 ETF 代號: {symbol}")
+
+        # 抓取各來源資料
+        yahoo_data = get_yahoo_data(symbol)
+        tpex_data = get_tpex_data(symbol, driver)
+        macromicro_data = get_macromicro_data(symbol, driver)
+        moneydj_data = get_moneydj_data(symbol, driver)
+
+        # 合併資料
+        combined_data = {
+            "Date": current_date,
+            "Symbol": symbol,
+            **yahoo_data,
+            **tpex_data,
+            **macromicro_data,
+            **moneydj_data
+        }
+
+        logging.debug(f"合併後的資料: {combined_data}")
+
+        all_data.append(combined_data)
+
+    # 關閉 Selenium WebDriver
+    driver.quit()
+
+    # 將所有資料轉換為 DataFrame 並寫入 Excel
+    for data in all_data:
+        export_to_excel(data)
+
+    logging.info("ETF 資料抓取與匯出完成。")
