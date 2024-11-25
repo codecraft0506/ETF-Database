@@ -9,6 +9,7 @@ import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
+from scrapling import StealthyFetcher
 
 # ------------------------------
 # 設定日誌
@@ -97,22 +98,32 @@ def get_tpex_data(symbol, driver):
 # ------------------------------
 # 抓取 MacroMicro 資料
 # ------------------------------
-def get_macromicro_data(symbol, driver):
+def get_macromicro_data(symbol):
     logging.info(f"抓取 MacroMicro 資料，ETF 代號: {symbol}")
     try:
+        # 初始化 Fetcher 並開啟網頁
         url = f"https://www.macromicro.me/etf/tw/intro/{symbol}"
-        driver.get(url)
+        fetcher = StealthyFetcher()
+        page = fetcher.fetch(url, headless=True)
         logging.debug("已開啟 MacroMicro 網頁")
-        time.sleep(3)  # 等待頁面加載
 
-        # 抓取年初至今總報酬率和一個月總報酬率
-        ytd_total_return = driver.find_element(By.XPATH, '//*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[7]').text.strip()
-        one_month_total_return = driver.find_element(By.XPATH, '//*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[4]').text.strip()
-        logging.info(f"成功抓取 MacroMicro 資料，ETF 代號: {symbol}")
+        # 確認頁面加載成功
+        if page.status == 200:
+            logging.debug("頁面加載成功")
+
+            # 抓取年初至今總報酬率和一個月總報酬率
+            ytd_total_return = page.xpath('//*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[7]')[0].text.strip()
+            one_month_total_return = page.xpath('//*[@id="content--price"]/div[3]/div/table/tbody/tr[3]/td[4]')[0].text.strip()
+            logging.info(f"成功抓取 MacroMicro 資料，ETF 代號: {symbol}")
+        else:
+            logging.error(f"頁面加載失敗，狀態碼: {page.status}")
+            ytd_total_return = "N/A"
+            one_month_total_return = "N/A"
     except Exception as e:
         logging.error(f"抓取 MacroMicro 資料時發生錯誤，ETF 代號: {symbol}，錯誤訊息: {e}")
         ytd_total_return = "N/A"
         one_month_total_return = "N/A"
+
     return {
         "年初至今總報酬率": ytd_total_return,
         "一個月總報酬率": one_month_total_return,
@@ -143,37 +154,6 @@ def get_moneydj_data(symbol, driver):
     }
 
 # ------------------------------
-# 將資料寫入 Excel（長格式，避免重複）
-# ------------------------------
-def export_to_excel(data, filename="stock_data.xlsx"):
-    logging.info(f"將資料寫入 Excel 檔案: {filename}")
-    try:
-        # 將新資料轉換為 DataFrame
-        df_new = pd.DataFrame([data])
-
-        if os.path.exists(filename):
-            # 讀取現有的 Excel 檔案
-            df_existing = pd.read_excel(filename)
-
-            # 檢查是否已存在相同日期和 Symbol 的資料
-            mask = (df_existing['Date'] == data['Date']) & (df_existing['Symbol'] == data['Symbol'])
-            if not df_existing[mask].empty:
-                logging.warning(f"資料已存在，跳過寫入：Date={data['Date']}, Symbol={data['Symbol']}")
-                return
-            else:
-                # 追加新資料
-                df_combined = pd.concat([df_existing, df_new], ignore_index=True)
-        else:
-            # 如果 Excel 檔案不存在，直接使用新資料
-            df_combined = df_new
-
-        # 將合併後的資料寫入 Excel
-        df_combined.to_excel(filename, index=False)
-        logging.info(f"資料成功寫入 {filename}")
-    except Exception as e:
-        logging.error(f"寫入 Excel 時發生錯誤：{e}")
-
-# ------------------------------
 # 主程式
 # ------------------------------
 if __name__ == "__main__":
@@ -197,8 +177,8 @@ if __name__ == "__main__":
 
         # 抓取各來源資料
         yahoo_data = get_yahoo_data(symbol)
-        tpex_data = get_tpex_data(symbol, driver)
-        macromicro_data = get_macromicro_data(symbol, driver)
+        # tpex_data = get_tpex_data(symbol, driver)
+        macromicro_data = get_macromicro_data(symbol)
         moneydj_data = get_moneydj_data(symbol, driver)
 
         # 合併資料
@@ -206,7 +186,7 @@ if __name__ == "__main__":
             "Date": current_date,
             "Symbol": symbol,
             **yahoo_data,
-            **tpex_data,
+            # **tpex_data,
             **macromicro_data,
             **moneydj_data
         }
@@ -219,7 +199,7 @@ if __name__ == "__main__":
     driver.quit()
 
     # 將所有資料轉換為 DataFrame 並寫入 Excel
-    for data in all_data:
-        export_to_excel(data)
+    df = pd.DataFrame(all_data)
+    df.to_excel("etf_data.xlsx", index=False)
 
     logging.info("ETF 資料抓取與匯出完成。")
