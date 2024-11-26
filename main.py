@@ -77,16 +77,16 @@ def get_yahoo_data(symbol):
 # ------------------------------
 # 抓取 TPEX 資料
 # ------------------------------
-def get_tpex_data(symbol, driver):
+def get_tpex_data(symbol, type, driver):
     logging.info(f"抓取 TPEX 資料，ETF 代號: {symbol}")
     try:
-        url = f"https://www.tpex.org.tw/zh-tw/product/etf/product/detail.html?type=bond&code={symbol}"
+        url = f"https://wwwov.tpex.org.tw/web/etf/etf_specification_{type}_detail.php?l=zh-tw&code={symbol}"
         driver.get(url)
         logging.debug("已開啟 TPEX 網頁")
         time.sleep(3)  # 等待頁面加載
 
         # 抓取收益分配日
-        dividend_distribution_date = driver.find_element(By.XPATH, '//*[@id="tables-content"]/div[2]/div[2]/table/tbody/tr[21]/td[2]').text.strip()
+        dividend_distribution_date = driver.find_element(By.XPATH, '/html/body/div[3]/div[2]/div[3]/div[2]/table/tbody/tr[21]/td[2]').text.strip()
         logging.info(f"成功抓取 TPEX 資料，ETF 代號: {symbol}")
     except Exception as e:
         logging.error(f"抓取 TPEX 資料時發生錯誤，ETF 代號: {symbol}，錯誤訊息: {e}")
@@ -158,7 +158,7 @@ def get_moneydj_data(symbol, driver):
 # ------------------------------
 if __name__ == "__main__":
     # 定義 ETF 代號列表
-    symbols = ['00687B', '00696B', '00719B']  # 可以根據需求增加或修改代號
+    symbols = ['00687B', '00696B', '00719B']
 
     # 獲取當前日期
     current_date = datetime.now().strftime("%Y-%m-%d")
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     # 初始化 Selenium WebDriver
     options = Options()
-    options.add_argument("--headless")  # 無頭模式
+    # options.add_argument("--headless")  # 無頭模式
     driver = webdriver.Firefox(options=options)
 
     all_data = []
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
         # 抓取各來源資料
         yahoo_data = get_yahoo_data(symbol)
-        # tpex_data = get_tpex_data(symbol, driver)
+        tpex_data = get_tpex_data(symbol, 'bond', driver)
         macromicro_data = get_macromicro_data(symbol)
         moneydj_data = get_moneydj_data(symbol, driver)
 
@@ -186,7 +186,7 @@ if __name__ == "__main__":
             "Date": current_date,
             "Symbol": symbol,
             **yahoo_data,
-            # **tpex_data,
+            **tpex_data,
             **macromicro_data,
             **moneydj_data
         }
