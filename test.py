@@ -1,29 +1,47 @@
-from selenium.webdriver.firefox.options import Options
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from scrapling import Adaptor
+from playwright.sync_api import sync_playwright
+import time
 
 url = "https://www.macromicro.me/etf/tw/intro/00679B"
 
-options = Options()
-options.set_preference("general.useragent.override", 
-                       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
-driver = webdriver.Firefox(options=options)
-driver.get(url)
-
-# Wait for the page to load
-WebDriverWait(driver, 20).until(
-    EC.element_to_be_clickable((By.ID, 'nav-dividend'))
-).click()
-
-# Wait for the dividend content to load
-data_element = WebDriverWait(driver, 20).until(
-    EC.presence_of_element_located((By.CSS_SELECTOR, '#content--dividend div.your-target-class'))
-)
-
-data = data_element.text.strip()
-print(data)
-
-driver.quit()
+# 使用 Playwright 進行瀏覽器自動化
+with sync_playwright() as p:
+    try:
+        # 初始化瀏覽器（非無頭模式）
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page()
+        
+        # 瀏覽目標網頁
+        page.goto(url)
+        
+        # 模擬人類行為的等待時間
+        time.sleep(3)
+        
+        # 使用 CSS 選擇器點擊導航按鈕
+        page.click('#nav-dividend')
+        
+        # 等待股利內容加載
+        page.wait_for_selector('#content--dividend div.your-target-class', timeout=10000)
+        time.sleep(3)  # 額外等待，以確保內容完全加載
+        
+        # 獲取更新後的 HTML 內容
+        content = page.content()
+        
+        # 初始化 Adaptor 解析 HTML
+        adaptor = Adaptor(content, url=url)
+        
+        # 使用 CSS 選擇器找到股利內容
+        data_element = adaptor.css('#content--dividend div.your-target-class', auto_match=True)
+        
+        if data_element:
+            data = data_element.text.strip()
+            print(data)
+        else:
+            print("未找到股利內容")
+        
+    except Exception as e:
+        print(f"發生錯誤: {e}")
+    
+    finally:
+        # 關閉瀏覽器
+        browser.close()
