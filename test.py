@@ -43,5 +43,4 @@ with sync_playwright() as p:
         print(f"發生錯誤: {e}")
     
     finally:
-        # 關閉瀏覽器
         browser.close()
