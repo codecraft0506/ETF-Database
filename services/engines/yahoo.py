@@ -2,10 +2,9 @@ import requests
 from lxml import html
 
 def get_yahoo_data(symbol):
-    # print(f"抓取 Yahoo 資料，ETF 代號: {symbol}")
     try:
         dividend_url = f"https://tw.stock.yahoo.com/quote/{symbol}.TWO/dividend"
-        dividend_response = requests.get(dividend_url)
+        dividend_response = requests.get(dividend_url, timeout=10)
         dividend_response.raise_for_status()
         dividend_tree = html.fromstring(dividend_response.text)
 
@@ -20,7 +19,7 @@ def get_yahoo_data(symbol):
 
         # 抓取資產規模、除息日
         profile_url = f"https://tw.stock.yahoo.com/quote/{symbol}.TWO/profile"
-        profile_response = requests.get(profile_url)
+        profile_response = requests.get(profile_url, timeout=10)
         profile_response.raise_for_status()
         profile_tree = html.fromstring(profile_response.text)
 
@@ -30,17 +29,14 @@ def get_yahoo_data(symbol):
         asset_size = asset_size[0].strip() if asset_size else "-"
         ex_dividend_date = ex_dividend_date[0].strip() if ex_dividend_date else "-"
 
-        # print(f"成功抓取 Yahoo 資料，ETF 代號: {symbol}")
-
         return {
-            "當月配息金額": dividend_amount,
-            "當月殖利率": dividend_yield,
-            "填息天數": dividend_recovery_days,
-            "資產規模": asset_size,
-            "除息日": ex_dividend_date,
+            "當月配息金額": dividend_amount if dividend_amount != "" else "-",
+            "當月殖利率": dividend_yield if dividend_yield != "" else "-",
+            "填息天數": dividend_recovery_days if dividend_recovery_days != "" else "-",
+            "資產規模": asset_size if asset_size != "" else "-",
+            "除息日": ex_dividend_date if ex_dividend_date != "" else "-",
         }
-    except Exception as e:
-        # print(f"抓取 Yahoo 資料時發生錯誤，ETF 代號: {symbol}")
+    except Exception:
         return {
             "當月配息金額": "Error",
             "當月殖利率": "Error",
@@ -48,6 +44,6 @@ def get_yahoo_data(symbol):
             "資產規模": "Error",
             "除息日": "Error",
         }
-    
+
 if __name__ == "__main__":
     print(get_yahoo_data("00678"))

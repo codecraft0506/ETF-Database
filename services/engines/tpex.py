@@ -28,7 +28,7 @@ def get_tpex_data(symbol, headless=True):
         driver.quit()
     
     return {
-        "收益分配日": dividend_distribution_date,
+        "收益分配日": dividend_distribution_date if dividend_distribution_date != "" else "-",
     }
 
 if __name__ == "__main__":
