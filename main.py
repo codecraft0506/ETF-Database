@@ -15,7 +15,7 @@ def initialize_sheets_api():
 # 寫入數據到 Google Sheet
 def write_to_sheet(service,data):
     body = {
-        'values': [["債券分類", "基金名稱", "基金代號", "發行日期", "市價", "受益人數", "存續期間(年)", "平均票息率(%)"]]+data
+        'values': [["是否為美國公債","債券分類", "基金名稱", "基金代號", "發行日期", "市價", "受益人數", "存續期間(年)", "平均票息率(%)"]]+data
     }
     result = service.spreadsheets().values().update(
         spreadsheetId=SPREADSHEET_ID,

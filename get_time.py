@@ -4,11 +4,20 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException, WebDriverException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 def get_time(company,code,name, max_retries=3):
     retries = 0
     while retries < max_retries:
-        driver = webdriver.Chrome()
+        # 設定選項
+        options = Options()
+        options.add_argument('--headless')  # 啟用無頭模式
+        options.add_argument('--disable-gpu')  # 如果你使用的是 Windows，需要禁用 GPU
+        options.add_argument('--disable-dev-shm-usage')  # 防止共享內存問題
+        # 初始化 WebDriver
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         try:
             if(company=='元大'):
                 driver.get(f'https://www.yuantaetfs.com/tradeInfo/pcf/{code}')
@@ -55,7 +64,10 @@ def get_time(company,code,name, max_retries=3):
                 driver.quit()
                 return percent,year
             elif(company=='富邦'):
-                driver.get(f'https://websys.fsit.com.tw/FubonETF/Fund/Assets.aspx?stkId={code}')
+                if(code=='00718B'):
+                    driver.get('https://websys.fsit.com.tw/FubonETF/Trade/Assets.aspx?stkId=00718B&ddate=20241128&lan=TW')
+                else:
+                    driver.get(f'https://websys.fsit.com.tw/FubonETF/Fund/Assets.aspx?stkId={code}')
                 wait = WebDriverWait(driver, 10)
                 close_button = wait.until(
                     EC.element_to_be_clickable((By.XPATH, "//div[@class='agree']/button"))
@@ -463,4 +475,4 @@ def get_time(company,code,name, max_retries=3):
                 print("達到最大重試次數，退出...")
                 driver.quit()
                 return "", ""
-get_time("台新", "00734B", "台新摩根大通新興市場投資等級美元債券ETF基金")
+#print(get_time("富邦", "00718B", "富邦中國政策債"))

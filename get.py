@@ -6,24 +6,30 @@ from bs4 import BeautifulSoup
 import time
 import requests
 from get_time import get_time
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 # 定義函數抓取單頁數據
 def scrape_page_data():
+    # 設定選項
+    options = Options()
+    options.add_argument('--headless')  # 啟用無頭模式
+    options.add_argument('--disable-gpu')  # 如果你使用的是 Windows，需要禁用 GPU
+    options.add_argument('--disable-dev-shm-usage')  # 防止共享內存問題
     # 初始化 WebDriver
-    driver = webdriver.Chrome()  # 確保 ChromeDriver 已安裝
-    ETF=["股票型ETF","債券型ETF","債券型ETF","債券型ETF","原物料型ETF","其他型ETF"]
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    ETF=["公債","投資型公司債","新興市場債",]
     request_href=[
-        "https://www.cmoney.tw/etf/tw/filter/stock?key=%E5%B7%A5%E6%A5%AD%26%E6%88%BF%E5%9C%B0%E7%94%A2%26%E8%83%BD%E6%BA%90%26%E8%B3%87%E8%A8%8A%E7%A7%91%E6%8A%80%26%E9%80%9A%E8%A8%8A%E6%9C%8D%E5%8B%99%26%E9%86%AB%E7%99%82%E4%BF%9D%E5%81%A5%26%E9%87%91%E8%9E%8D",
         "https://www.cmoney.tw/etf/tw/filter/bond?key=%E5%85%AC%E5%82%B5",
         "https://www.cmoney.tw/etf/tw/filter/bond?key=%E6%8A%95%E8%B3%87%E7%B4%9A%E5%85%AC%E5%8F%B8%E5%82%B5",
-        "https://www.cmoney.tw/etf/tw/filter/bond?key=%E6%96%B0%E8%88%88%E5%B8%82%E5%A0%B4%E5%82%B5",
-        "https://www.cmoney.tw/etf/tw/filter/material?key=%E8%83%BD%E6%BA%90%26%E8%B2%B4%E9%87%91%E5%B1%AC%26%E8%BE%B2%E6%A5%AD",
-        "https://www.cmoney.tw/etf/tw/filter/other?key=%E8%B2%A8%E5%B9%A3"        
+        "https://www.cmoney.tw/etf/tw/filter/bond?key=%E6%96%B0%E8%88%88%E5%B8%82%E5%A0%B4%E5%82%B5"      
         ]
     check=[]
     company=[]
     all_code=[]
     etf_data = []
-    for i in range(6):
+    
+    for i in range(3):
         #if(ETF[i]=='債券型ETF'):continue
         driver.get(request_href[i])  # 替換為目標網址
         # 等待頁面加載完成
@@ -94,13 +100,13 @@ def scrape_page_data():
             people=columns[2].text.strip()
             if(name[0:2] not in company):
                 company.append(name[0:2])
-            if(ETF[i]=='債券型ETF'):
-                percent,year=get_time(name[0:2],code,name)
-                print([ETF[i], name, code, start, price,people, percent, year])
-                etf_data.append([ETF[i], name, code, start, price,people, percent, year])
+            percent,year=get_time(name[0:2],code,name)
+            if(i==0):
+                print(["美國公債",ETF[i], name, code, start, price,people, percent, year])
+                etf_data.append(["美國公債",ETF[i], name, code, start, price,people, percent, year])
             else:
-                print([ETF[i], name, code, start, price,people, "", ""])
-                etf_data.append([ETF[i], name, code, start, price,people, "", ""])
+                print(["非美國公債",ETF[i], name, code, start, price,people, percent, year])
+                etf_data.append(["非美國公債",ETF[i], name, code, start, price,people, percent, year])
             #print(etf_data)
     print(company)
     return etf_data
