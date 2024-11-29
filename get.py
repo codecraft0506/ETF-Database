@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import time
 import requests
+from get_data import get_data
 from get_time import get_time
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -101,18 +102,20 @@ def scrape_page_data():
             if(name[0:2] not in company):
                 company.append(name[0:2])
             percent,year=get_time(name[0:2],code,name)
+            dist=get_data(code)
             if(i==0):
-                print(["美國公債",ETF[i], name, code, start, price,people, percent, year])
-                etf_data.append(["美國公債",ETF[i], name, code, start, price,people, percent, year])
+                print(["美國公債",ETF[i], name, code, start, price,people, percent, year,dist['當月配息金額'],dist['當月殖利率'],dist['填息天數'],dist['資產規模'],dist['除息日'],dist['收益分配日'],dist['年初至今總報酬率'],dist['一個月總報酬率'],dist['前一年管理費'],dist['保管銀行']])
+                etf_data.append(["美國公債",ETF[i], name, code, start, price,people, percent, year,dist['當月配息金額'],dist['當月殖利率'],dist['填息天數'],dist['資產規模'],dist['除息日'],dist['收益分配日'],dist['年初至今總報酬率'],dist['一個月總報酬率'],dist['前一年管理費'],dist['保管銀行']])
             else:
-                print(["非美國公債",ETF[i], name, code, start, price,people, percent, year])
-                etf_data.append(["非美國公債",ETF[i], name, code, start, price,people, percent, year])
+                print(["非美國公債",ETF[i], name, code, start, price,people, percent, year,dist['當月配息金額'],dist['當月殖利率'],dist['填息天數'],dist['資產規模'],dist['除息日'],dist['收益分配日'],dist['年初至今總報酬率'],dist['一個月總報酬率'],dist['前一年管理費'],dist['保管銀行']])
+                etf_data.append(["非美國公債",ETF[i], name, code, start, price,people, percent, year,dist['當月配息金額'],dist['當月殖利率'],dist['填息天數'],dist['資產規模'],dist['除息日'],dist['收益分配日'],dist['年初至今總報酬率'],dist['一個月總報酬率'],dist['前一年管理費'],dist['保管銀行']])
             #print(etf_data)
     print(company)
     return etf_data
 
 # 抓取所有頁面的數據
-#all_data = scrape_page_data()
+if __name__ == '__main__':
+    all_data = scrape_page_data()
 """
 while True:
     all_data.extend(scrape_page_data())
