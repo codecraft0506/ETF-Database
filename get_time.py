@@ -4,20 +4,19 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException, WebDriverException
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.alert import Alert
 import time
 def get_time(company,code,name, max_retries=3):
     retries = 0
     while retries < max_retries:
         # 設定選項
-        options = Options()
-        options.add_argument('--headless')  # 啟用無頭模式
-        options.add_argument('--disable-gpu')  # 如果你使用的是 Windows，需要禁用 GPU
-        options.add_argument('--disable-dev-shm-usage')  # 防止共享內存問題
+        #options = Options()
+        #options.add_argument('--headless')  # 啟用無頭模式
+        #options.add_argument('--disable-gpu')  # 如果你使用的是 Windows，需要禁用 GPU
+        #options.add_argument('--disable-dev-shm-usage')  # 防止共享內存問題
         # 初始化 WebDriver
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        #driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        driver=webdriver.Chrome()
         try:
             if(company=='元大'):
                 driver.get(f'https://www.yuantaetfs.com/tradeInfo/pcf/{code}')
@@ -392,7 +391,7 @@ def get_time(company,code,name, max_retries=3):
                     driver.get("https://www.tsit.com.tw/ETF?Tag=PurchaseTag&KindId=2119&FundId=16086")
                 elif(code=="00734B"):
                     driver.get("https://www.tsit.com.tw/ETF?Tag=PurchaseTag&KindId=2119&FundId=15970")
-                else: return "",""
+                else: return "-","-"
                 wait = WebDriverWait(driver, 10)  # 最長等待 10 秒
                 # 獲取所有表格
                 all_tables = driver.find_elements(By.XPATH, "//table[@class='m-table m-mix-table m-add-color']")
@@ -466,7 +465,30 @@ def get_time(company,code,name, max_retries=3):
                 driver.quit()
                 return percent,year
             elif(company=="第一"):
-                return "",""
+                driver.get("https://www.fsitc.com.tw/FundDetail.aspx?ID=101#TabLinkdivEditTab9")
+                wait = WebDriverWait(driver, 10)  # 最長等待 10 秒
+                alert = Alert(driver)  # 抓取 alert
+                #print("捕獲到警告框，內容為:", alert.text)
+                alert.accept()  # 點擊確定以關閉警告框
+                # 等待目標表格加載完成
+                bonding_div = wait.until(
+                    EC.presence_of_element_located((By.ID, "Bonding"))
+                )
+        
+                # 確保表格加載完成
+                table = bonding_div.find_element(By.CLASS_NAME, "subL-tbl2")
+                
+                # 抓取「殖利率」的第一個值
+                yield_row = table.find_element(By.XPATH, ".//tr[td[text()='殖利率(%)']]")
+                yield_value = yield_row.find_element(By.XPATH, "./td[2]").text.strip()
+        
+                # 抓取「存續期間」的第一個值
+                duration_row = table.find_element(By.XPATH, ".//tr[td[text()='存續期間(年)']]")
+                duration_value = duration_row.find_element(By.XPATH, "./td[2]").text.strip()
+    
+                #print("殖利率(%):", yield_value)
+                #print("存續期間(年):", duration_value)
+                return yield_value,duration_value 
         except (TimeoutException, StaleElementReferenceException, NoSuchElementException, WebDriverException) as e:
             print(f"出現錯誤: {e}. 第 {retries + 1} 次重試...")
             retries += 1
@@ -474,5 +496,5 @@ def get_time(company,code,name, max_retries=3):
             if retries >= max_retries:
                 print("達到最大重試次數，退出...")
                 driver.quit()
-                return "", ""
-#print(get_time("富邦", "00718B", "富邦中國政策債"))
+                return "-", "-"
+#print(get_time("富邦", "00718B", " 富邦中國政策債"))
