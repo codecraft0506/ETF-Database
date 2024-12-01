@@ -12,13 +12,16 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 # 定義函數抓取單頁數據
 def scrape_page_data():
+    # 指定 ChromeDriver 的路徑
+    driver_path = r".\chromedriver-win64\chromedriver-win64\chromedriver.exe"
+    service = Service(driver_path)
     # 設定選項
     options = Options()
     options.add_argument('--headless')  # 啟用無頭模式
     options.add_argument('--disable-gpu')  # 如果你使用的是 Windows，需要禁用 GPU
     options.add_argument('--disable-dev-shm-usage')  # 防止共享內存問題
     # 初始化 WebDriver
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver = webdriver.Chrome(service=service,options=options)
     ETF=["公債","投資型公司債","新興市場債",]
     request_href=[
         "https://www.cmoney.tw/etf/tw/filter/bond?key=%E5%85%AC%E5%82%B5",
@@ -40,10 +43,10 @@ def scrape_page_data():
         html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
         time.sleep(2)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         href=[]
         while True:
             next_button = driver.find_element("css selector", 'button[aria-label="next"]')
-            #print(next_button)
             rows = driver.find_elements(By.CSS_SELECTOR, "table.cm-table__table tbody tr")
             visible_rows = [row for row in rows if row.is_displayed()]
             for tr in visible_rows:

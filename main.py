@@ -56,9 +56,8 @@ if __name__ == '__main__':
 
     # 初始化 Google Sheets API
     service = initialize_sheets_api(SCOPES)
-
     # 指定 Google Sheet 的 ID 和範圍
-    SPREADSHEET_ID = "1RE6hoBhEANdKZ-dZsi-SilnX0HvQq8XpW1H7FoXn_vE"  # 替換為你的 Google Sheet ID
+    SPREADSHEET_ID = "1YKAX3iGfIABzLHc8pWWdTtXDe-LIbr7VLQCnYriXhQg"  # 替換為你的 Google Sheet ID
     RANGE_NAME = '工作表1!A1'
 
     # 抓取數據
