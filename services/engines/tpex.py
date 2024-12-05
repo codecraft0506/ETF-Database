@@ -32,4 +32,4 @@ def get_tpex_data(symbol, headless=True):
     }
 
 if __name__ == "__main__":
-    print(get_tpex_data("0052", headless=False))
+    print(get_tpex_data("00937B", headless=False))
