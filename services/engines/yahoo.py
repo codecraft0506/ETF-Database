@@ -4,7 +4,7 @@ from lxml import html
 def get_yahoo_data(symbol):
     # dividend
     try:
-        dividend_recovery_days = "-"
+        dividend_recovery_days_str = "-"
         dividend_amount = "-"
         dividend_yield = "-"
         one_year_dividend_amount = "-"
@@ -54,18 +54,18 @@ def get_yahoo_data(symbol):
                 continue
         
         if len(dividend_recovery_days) == 0:
-            dividend_recovery_days = "-"
+            dividend_recovery_days_str = "-"
             dividend_amount = "-"
             dividend_yield = "-"
             one_year_dividend_amount = "-"
             one_year_dividend_yield = "-"
-        elif len(dividend_recovery_days) < 4:
-            dividend_recovery_days += "(Error: 未滿4次)"
         else:
-            dividend_recovery_days = ", ".join(dividend_recovery_days)
+            dividend_recovery_days_str = ", ".join(dividend_recovery_days)
+            if len(dividend_recovery_days) < 4:
+                dividend_recovery_days_str += "(Error: 未滿4次)"
             
     except Exception as e:
-        dividend_recovery_days = "Error"
+        dividend_recovery_days_str = "Error"
         dividend_amount = "Error"
         dividend_yield = "Error"
         one_year_dividend_amount = "Error"
@@ -139,7 +139,7 @@ def get_yahoo_data(symbol):
     return {
         "當月配息金額": dividend_amount,
         "當月殖利率": dividend_yield,
-        "填息天數(遠-近)": dividend_recovery_days,
+        "填息天數(遠-近)": dividend_recovery_days_str,
         "資產規模": asset_size,
         "除息日": ex_dividend_date,
         "年化報酬率": annual_return,
