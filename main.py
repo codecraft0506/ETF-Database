@@ -3,7 +3,13 @@ from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 from get import scrape_page_data
+from utils import get_last_row, append_to_sheet
+from googleapiclient.http import HttpRequest
+import httplib2
 
+# 增加超時時間（例如，120秒）
+httplib2.Http.timeout = 120
+HttpRequest.http = httplib2.Http(timeout=120)
 # 動態載入 .env 文件
 def load_env_file(env_file):
     if os.path.exists(env_file):
@@ -32,19 +38,6 @@ def initialize_sheets_api(scopes):
     service = build('sheets', 'v4', credentials=creds)
     return service
 
-# 寫入數據到 Google Sheet
-def write_to_sheet(service, data, spreadsheet_id, range_name):
-    body = {
-        'values': [["是否為美國公債", "債券分類", "基金名稱", "基金代號", "發行日期", "市價", "受益人數", "存續期間(年)", "平均票息率(%)","當月配息金額","當月殖利率","填息天數","資產規模","除息日","收益分配日","年初至今總報酬率","一個月總報酬率","前一年管理費","保管銀行"]] + data
-    }
-    result = service.spreadsheets().values().update(
-        spreadsheetId=spreadsheet_id,
-        range=range_name,
-        valueInputOption="RAW",
-        body=body
-    ).execute()
-    print(f"{result.get('updatedCells')} cells updated.")
-
 # 主程式
 if __name__ == '__main__':
     # Google Sheets API 的範圍
@@ -56,12 +49,16 @@ if __name__ == '__main__':
 
     # 初始化 Google Sheets API
     service = initialize_sheets_api(SCOPES)
+
     # 指定 Google Sheet 的 ID 和範圍
     SPREADSHEET_ID = "1RE6hoBhEANdKZ-dZsi-SilnX0HvQq8XpW1H7FoXn_vE"  # 替換為你的 Google Sheet ID
-    RANGE_NAME = '工作表1!A1'
+    SHEET_NAME = '工作表1'
 
-    # 抓取數據
-    data = scrape_page_data()
+    # 如果第一行需要標題
+    headers = ["抓取日期", "是否為美國公債", "債券分類", "基金名稱", "基金代號", "發行日期", "市價", "受益人數(上月底)", "受益人數(上上月底)", "平均票息率(%)","存續期間(年)", "當月配息金額", "當月殖利率", "填息天數(遠-近)", "資產規模", "除息日", "年化報酬率", "年初至今總報酬率", "一個月總報酬率","近四季累積配息","近四季殖利率","收益分配日", "前一年管理費", "保管銀行"]
+    if get_last_row(service, SPREADSHEET_ID, SHEET_NAME) == 1:
+        append_to_sheet(service, headers, SPREADSHEET_ID, 1, SHEET_NAME)
+    # 調用 scrape_page_data
+    scrape_page_data(service, SPREADSHEET_ID, SHEET_NAME)
+    
 
-    # 寫入數據到 Google Sheet
-    write_to_sheet(service, data, SPREADSHEET_ID, RANGE_NAME)

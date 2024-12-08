@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException, WebDriverException
 from selenium.webdriver.common.alert import Alert
 import time
-def get_time(company,code,name, max_retries=3):
+def get_time(company,code,name, max_retries=5):
     retries = 0
     while retries < max_retries:
         # 設定選項
@@ -178,6 +178,12 @@ def get_time(company,code,name, max_retries=3):
                 # 使用 JavaScript 替換 onclick 行為
                 driver.execute_script("arguments[0].click();", agree_button)
                 #print("成功點擊『同意』按鈕")
+                # 等待模態框中的 "close" 按鈕出現
+                close_button = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "span.close"))
+                )
+                # 點擊 "close" 按鈕
+                close_button.click()
                 # 等待頁面加載完成
                 wait.until(
                     lambda driver: driver.execute_script("return document.readyState") == "complete"
@@ -497,4 +503,4 @@ def get_time(company,code,name, max_retries=3):
                 print("達到最大重試次數，退出...")
                 driver.quit()
                 return "-", "-"
-#print(get_time("富邦", "00718B", " 富邦中國政策債"))
+print(get_time("復華", "00768B", "復華20年美債"))
