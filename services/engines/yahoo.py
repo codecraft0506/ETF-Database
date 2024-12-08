@@ -4,68 +4,75 @@ from lxml import html
 def get_yahoo_data(symbol):
     # dividend
     try:
-        dividend_recovery_days_str = "-"
-        dividend_amount = "-"
-        dividend_yield = "-"
-        one_year_dividend_amount = "-"
-        one_year_dividend_yield = "-"
+        dividend_recovery_days_list = []
+        dividend_amount_list = []
+        dividend_yield_list = []
 
         dividend_url = f"https://tw.stock.yahoo.com/quote/{symbol}.TWO/dividend"
         dividend_response = requests.get(dividend_url, timeout=10)
         dividend_response.raise_for_status()
         dividend_tree = html.fromstring(dividend_response.text)
+        duration = ''
         
-        dividend_recovery_days = []
         i = 0
         
-        while (len(dividend_recovery_days) < 4) and (i < 12):
+        while (len(dividend_recovery_days_list) < 5) and (i < 20):
             i += 1
             try:
                 dividend_recovery_day = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[11]/text()')[0].strip()
                 if dividend_recovery_day and dividend_recovery_day != '' and dividend_recovery_day != ' ':
-                    dividend_recovery_days.append(dividend_recovery_day)
+                    dividend_recovery_days_list.append(dividend_recovery_day)
+                    if duration == '' or duration == 'Error':
+                        try:
+                            duration_str = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[2]/div/div[2]/text()')[0].strip()
+                            if 'S' in duration_str:
+                                duration = 'S'
+                            elif 'Q' in duration_str:
+                                duration = 'Q'
+                            elif 'M' in duration_str:
+                                duration = 'M'
+                            else:
+                                duration = 'Y'
+                        except Exception as e:
+                            duration = "Error"
                     
-                    if len(dividend_recovery_days) == 1:
-                        try:
-                            dividend_amount = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[3]/span/text()')[0].strip()
-                        except Exception as e:
-                            dividend_amount = "Error"
-
-                        try:
-                            dividend_yield = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[5]/span/text()')[0].strip()
-                        except Exception as e:
-                            dividend_yield = "Error"
-                else:
-                    if (one_year_dividend_amount == "-" and one_year_dividend_yield == "-") or (one_year_dividend_amount == "Error" and one_year_dividend_yield == "Error"):
-                        try:
-                            one_year_dividend_amount = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[3]/span/text()')[0].strip()
-                            one_year_dividend_yield = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[5]/span/text()')[0].strip()
-                        except Exception as e:
-                            one_year_dividend_amount = "Error"
-                            one_year_dividend_yield = "Error"
-            except Exception as e:
-                if (one_year_dividend_amount == "-" and one_year_dividend_yield == "-") or (one_year_dividend_amount == "Error" and one_year_dividend_yield == "Error"):
                     try:
-                        one_year_dividend_amount = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[3]/span/text()')[0].strip()
-                        one_year_dividend_yield = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[5]/span/text()')[0].strip()
+                        dividend_amount_list.append(dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[3]/span/text()')[0].strip())
                     except Exception as e:
-                        one_year_dividend_amount = "Error"
-                        one_year_dividend_yield = "Error"
+                        dividend_amount_list.append("Error")
+                    try:
+                        dividend_yield_list.append(dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[5]/span/text()')[0].strip())
+                    except Exception as e:
+                        dividend_yield_list.append("Error")
+                        
+            except Exception as e:
                 continue
         
-        if len(dividend_recovery_days) == 0:
-            dividend_recovery_days_str = "-"
+        if len(dividend_recovery_days_list) == 0:
+            dividend_recovery_days = "-"
             dividend_amount = "-"
             dividend_yield = "-"
             one_year_dividend_amount = "-"
             one_year_dividend_yield = "-"
         else:
-            dividend_recovery_days_str = ", ".join(dividend_recovery_days)
-            if len(dividend_recovery_days) < 4:
-                dividend_recovery_days_str += "(Error: 未滿4次)"
+            dividend_recovery_days = ", ".join(dividend_recovery_days_list[0:4])
+            dividend_amount = dividend_amount_list[0]
+            dividend_yield = dividend_yield_list[0]
+            if duration == 'S':
+                one_year_dividend_amount = ', '.join(dividend_amount_list[1:3])
+                one_year_dividend_yield = ', '.join(dividend_yield_list[1:3])
+            elif duration == 'Q':
+                one_year_dividend_amount = ', '.join(dividend_amount_list[1:5])
+                one_year_dividend_yield = ', '.join(dividend_yield_list[1:5])
+            elif duration == 'M':
+                one_year_dividend_amount = ', '.join(dividend_amount_list[1:13])
+                one_year_dividend_yield = ', '.join(dividend_yield_list[1:13])
+            elif duration == 'Y':
+                one_year_dividend_amount = dividend_amount_list[0]
+                one_year_dividend_yield = dividend_yield_list[0]
             
     except Exception as e:
-        dividend_recovery_days_str = "Error"
+        dividend_recovery_days = "Error"
         dividend_amount = "Error"
         dividend_yield = "Error"
         one_year_dividend_amount = "Error"
@@ -139,7 +146,7 @@ def get_yahoo_data(symbol):
     return {
         "當月配息金額": dividend_amount,
         "當月殖利率": dividend_yield,
-        "填息天數(遠-近)": dividend_recovery_days_str,
+        "填息天數(遠-近)": dividend_recovery_days,
         "資產規模": asset_size,
         "除息日": ex_dividend_date,
         "年化報酬率": annual_return,
