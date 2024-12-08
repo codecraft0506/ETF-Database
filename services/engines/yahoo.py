@@ -68,8 +68,8 @@ def get_yahoo_data(symbol):
                 one_year_dividend_amount = ', '.join(dividend_amount_list[1:13])
                 one_year_dividend_yield = ', '.join(dividend_yield_list[1:13])
             elif duration == 'Y':
-                one_year_dividend_amount = dividend_amount_list[0]
-                one_year_dividend_yield = dividend_yield_list[0]
+                one_year_dividend_amount = dividend_amount_list[1]
+                one_year_dividend_yield = dividend_yield_list[1]
             
     except Exception as e:
         dividend_recovery_days = "Error"
