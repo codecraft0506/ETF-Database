@@ -59,17 +59,18 @@ def get_yahoo_data(symbol):
             dividend_amount = dividend_amount_list[0]
             dividend_yield = dividend_yield_list[0]
             if duration == 'S':
-                one_year_dividend_amount = ', '.join(dividend_amount_list[1:3])
-                one_year_dividend_yield = ', '.join(dividend_yield_list[1:3])
+                one_year_dividend_amount = sum(float(amount) for amount in dividend_amount_list[1:3])
+                one_year_dividend_yield = sum(float(yield_.replace('%', '')) for yield_ in dividend_yield_list[1:3])
             elif duration == 'Q':
-                one_year_dividend_amount = ', '.join(dividend_amount_list[1:5])
-                one_year_dividend_yield = ', '.join(dividend_yield_list[1:5])
+                one_year_dividend_amount = sum(float(amount) for amount in dividend_amount_list[1:5])
+                one_year_dividend_yield = sum(float(yield_.replace('%', '')) for yield_ in dividend_yield_list[1:5])
             elif duration == 'M':
-                one_year_dividend_amount = ', '.join(dividend_amount_list[1:13])
-                one_year_dividend_yield = ', '.join(dividend_yield_list[1:13])
+                one_year_dividend_amount = sum(float(amount) for amount in dividend_amount_list[1:13])
+                one_year_dividend_yield = sum(float(yield_.replace('%', '')) for yield_ in dividend_yield_list[1:13])
             elif duration == 'Y':
-                one_year_dividend_amount = dividend_amount_list[1]
-                one_year_dividend_yield = dividend_yield_list[1]
+                one_year_dividend_amount = float(dividend_amount_list[1])
+                one_year_dividend_yield = float(dividend_yield_list[1].replace('%', ''))
+            one_year_dividend_yield = f"{one_year_dividend_yield:.2f}%"
             
     except Exception as e:
         dividend_recovery_days = "Error"
