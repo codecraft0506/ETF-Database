@@ -71,10 +71,10 @@ def get_yahoo_data(symbol):
                 one_year_dividend_amount = float(dividend_amount_list[1])
                 one_year_dividend_yield = float(dividend_yield_list[1].replace('%', ''))
             
-            dividend_amount = f"{dividend_amount:.1f}"
+            dividend_amount = f"{dividend_amount:.3f}"
             dividend_yield = f"{dividend_yield:.1f}%"
-            one_year_dividend_amount = f"{one_year_dividend_amount:.1f}"
-            one_year_dividend_yield = f"{one_year_dividend_yield:.3f}%"
+            one_year_dividend_amount = f"{one_year_dividend_amount:.3f}"
+            one_year_dividend_yield = f"{one_year_dividend_yield:.1f}%"
             
     except Exception as e:
         dividend_recovery_days = "Error"
