@@ -36,4 +36,3 @@ def get_moneydj_data(symbol, headless=True):
 
 if __name__ == "__main__": 
     print(get_moneydj_data("00937B", headless=False))
-
