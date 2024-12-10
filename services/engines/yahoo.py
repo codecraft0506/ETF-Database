@@ -16,7 +16,7 @@ def get_yahoo_data(symbol):
         
         i = 0
         
-        while (len(dividend_recovery_days_list) < 5) and (i < 20):
+        while len(dividend_recovery_days_list) <= 12:
             i += 1
             try:
                 dividend_recovery_day = dividend_tree.xpath(f'//*[@id="main-2-QuoteDividend-Proxy"]/div/section[2]/div[3]/div[2]/div/div/ul/li[{i}]/div/div[11]/text()')[0].strip()
@@ -58,6 +58,7 @@ def get_yahoo_data(symbol):
             dividend_recovery_days = ", ".join(dividend_recovery_days_list[0:4])
             dividend_amount = float(dividend_amount_list[0])
             dividend_yield = float(dividend_yield_list[0].replace('%', ''))
+            print(dividend_amount_list[1:13])
             if duration == 'S':
                 one_year_dividend_amount = sum(float(amount) for amount in dividend_amount_list[1:3])
                 one_year_dividend_yield = sum(float(yield_.replace('%', '')) for yield_ in dividend_yield_list[1:3])
@@ -162,4 +163,4 @@ def get_yahoo_data(symbol):
     }
 
 if __name__ == "__main__":
-    print(get_yahoo_data("00848B"))
+    print(get_yahoo_data("0052"))
