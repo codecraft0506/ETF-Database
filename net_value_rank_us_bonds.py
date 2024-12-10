@@ -61,20 +61,21 @@ def process_bonds_data(sheet_data, bond_type):
     bonds = bonds.rename(columns={
         "基金代號": "代號",
         "基金名稱": "名稱",
-        "資產規模": "淨值規模(億)",
+        "資產規模": "淨值規模(億)上上月底",
     })
 
     # 新增「淨值規模(億)上個月底」欄位，所有值填入 0
     bonds["淨值規模(億)上月底"] = 0
 
     # 計算淨值規模(月增)
-    bonds["淨值規模(月增)"] = bonds["淨值規模(億)"] - bonds["淨值規模(億)上個月底"]
+    bonds["淨值規模(月增)"] = bonds["淨值規模(億)上月底"] - bonds["淨值規模(億)上上月底"]
     # 確保受益人數欄位為數值型
     bonds[f"受益人數({today_date})"] = bonds[f"受益人數({today_date})"].str.replace(",", "").astype(float)
     
     # 確保「受益人數(上月底)」為數值型態
     bonds["受益人數(上月底)"] = bonds["受益人數(上月底)"].str.replace(",", "").astype(float)
-    bonds["受益人數(月增)"] = bonds[f"受益人數({today_date})"] - bonds["受益人數(上月底)"]
+    bonds["受益人數(上上月底)"] = bonds["受益人數(上上月底)"].str.replace(",", "").astype(float)
+    bonds["受益人數(月增)"] = bonds["受益人數(上月底)"] - bonds["受益人數(上上月底)"]
     # 選取所需欄位
     columns_to_keep = [
         "規模排名", "代號", "名稱", "淨值規模(億)上上月底", "淨值規模(億)上月底",
